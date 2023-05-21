@@ -3,20 +3,53 @@ import { galleryItems } from './gallery-items.js';
 
 console.log(galleryItems);
 
-const galleryContainer = document.querySelector('.gallery');
+const list = document.querySelector('.gallery');
 
-galleryItems.forEach((item) => {
-  const galleryImage = document.createElement('img');
-  galleryImage.src = item.preview;
-  galleryImage.alt = item.description;
-  galleryImage.setAttribute('data-source', item.original);
-  galleryImage.classList.add('gallery__image');
+for (var i = 0; i < galleryItems.length; i++) {
+  const listItem = document.createElement('li');
+  listItem.classList.add('gallery__item');
+  list.appendChild(listItem);
 
-  galleryImage.addEventListener('click', (event) => {
-    const originalImageSrc = event.target.dataset.source;
-    const instance = basicLightbox.create(`<img src="${originalImageSrc}">`);
-    instance.show();
-  });
+  const link = document.createElement('a');
+  link.classList.add('gallery__link');
+  link.setAttribute('href', galleryItems[i].original);
+  listItem.appendChild(link);
 
-  galleryContainer.appendChild(galleryImage);
-});
+  const image = document.createElement('img');
+  image.classList.add('gallery__image');
+  image.setAttribute('src', galleryItems[i].preview);
+  image.setAttribute('data-source', galleryItems[i].original);
+  image.setAttribute('alt', galleryItems[i].description);
+  link.appendChild(image);
+
+  link.addEventListener(
+    'click',
+    (function (index) {
+      return function (event) {
+        event.preventDefault();
+
+        const lightbox = basicLightbox.create(
+          `<img src="${galleryItems[index].original}">`
+        );
+
+        const closeLightbox = function () {
+          lightbox.close();
+          document.removeEventListener('keydown', handleKeyDown);
+        };
+
+        const handleKeyDown = function (event) {
+          if (event.key === 'Escape') {
+            closeLightbox();
+          }
+        };
+
+        lightbox.show();
+        document.addEventListener('keydown', handleKeyDown);
+        lightbox
+          .element()
+          .querySelector('.basicLightbox')
+          .addEventListener('click', closeLightbox);
+      };
+    })(i)
+  );
+}

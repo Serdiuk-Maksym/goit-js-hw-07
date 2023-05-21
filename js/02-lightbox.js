@@ -1,35 +1,70 @@
 import { galleryItems } from './gallery-items.js';
-// Change code below this line
 
-document.addEventListener('DOMContentLoaded', () => {
-  const lightbox = new SimpleLightbox('.gallery');
+const list = document.querySelector('.gallery');
 
-  const galleryContainer = document.querySelector('.gallery');
+for (let i = 0; i < galleryItems.length; i++) {
+  const listItem = document.createElement('li');
+  listItem.classList.add('gallery__item');
+  list.appendChild(listItem);
 
-  galleryItems.forEach((item) => {
-    const galleryLink = document.createElement('a');
-    galleryLink.href = item.original;
-    galleryLink.classList.add('gallery__item');
+  const link = document.createElement('a');
+  link.classList.add('gallery__link');
+  link.setAttribute('href', galleryItems[i].original);
+  listItem.appendChild(link);
 
-    const galleryImage = document.createElement('img');
-    galleryImage.src = item.preview;
-    galleryImage.alt = item.description;
-    galleryImage.classList.add('gallery__image');
+  const image = document.createElement('img');
+  image.classList.add('gallery__image');
+  image.setAttribute('src', galleryItems[i].preview);
+  image.setAttribute('alt', galleryItems[i].description);
+  link.appendChild(image);
 
-    galleryLink.appendChild(galleryImage);
-    galleryContainer.appendChild(galleryLink);
-  });
+  link.addEventListener(
+    'click',
+    (function (index) {
+      return function (event) {
+        event.preventDefault();
 
-  const lightboxImages = galleryContainer.querySelectorAll('.gallery__image');
+        const gallery = new SimpleLightbox('.gallery a', {
+          captions: true,
+          captionDelay: 250,
+          captionsData: 'alt',
+          captionType: 'data',
+          captionPosition: 'bottom',
+        });
 
-  lightboxImages.forEach((image) => {
-    image.addEventListener('click', () => {
-      setTimeout(() => {
-        const caption = document.createElement('div');
-        caption.classList.add('caption');
-        caption.textContent = image.alt;
-        image.parentNode.appendChild(caption);
-      }, 250);
-    });
-  });
-});
+        const closeLightbox = function () {
+          gallery.close();
+          document.removeEventListener('keydown', handleKeyDown);
+        };
+
+        const handleKeyDown = function (event) {
+          if (event.key === 'Escape') {
+            closeLightbox();
+          }
+        };
+
+        gallery.on('show.simplelightbox', function (e) {
+          document.addEventListener('keydown', handleKeyDown);
+          const altText = e.caption;
+          const captionElement = document.createElement('div');
+          captionElement.className = 'slb-caption';
+          captionElement.innerHTML = altText;
+          captionElement.style.opacity = '0';
+          const captionContainer = gallery.captionContainer;
+          if (captionContainer) {
+            captionContainer.appendChild(captionElement);
+            setTimeout(function () {
+              captionElement.style.opacity = '1';
+            }, 250);
+          }
+        });
+
+        gallery.on('close.simplelightbox', function () {
+          document.removeEventListener('keydown', handleKeyDown);
+        });
+
+        gallery.open(index);
+      };
+    })(i)
+  );
+}
