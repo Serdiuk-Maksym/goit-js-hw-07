@@ -3,53 +3,39 @@ import { galleryItems } from './gallery-items.js';
 
 console.log(galleryItems);
 
-const list = document.querySelector('.gallery');
+const ulEl = document.querySelector('.gallery');
+function createGalleryMarkUp(items) {
+  return items
+    .map(
+      (item) =>
+        `<li class="gallery__item">
+   <a class="gallery__link" 
+   href ="${item.original}">
+   <img
+   class="gallery__image" 
+   src="${item.preview}"
+   data-source="${item.original}"
+   alt="${item.description}"/></a></li>`
+    )
+    .join('');
+}
+const addGalleryMarkUp = createGalleryMarkUp(galleryItems);
+ulEl.innerHTML = addGalleryMarkUp;
+ulEl.addEventListener('click', onGalleryItemClick);
+function onGalleryItemClick(event) {
+  event.preventDefault();
+  if (event.target.nodeName !== 'IMG') {
+    return;
+  }
+  const instance = basicLightbox.create(`<img src=
+      "${event.target.dataset.source}"
+       width="800" height ="600"/>`);
+  instance.show();
 
-for (var i = 0; i < galleryItems.length; i++) {
-  const listItem = document.createElement('li');
-  listItem.classList.add('gallery__item');
-  list.appendChild(listItem);
-
-  const link = document.createElement('a');
-  link.classList.add('gallery__link');
-  link.setAttribute('href', galleryItems[i].original);
-  listItem.appendChild(link);
-
-  const image = document.createElement('img');
-  image.classList.add('gallery__image');
-  image.setAttribute('src', galleryItems[i].preview);
-  image.setAttribute('data-source', galleryItems[i].original);
-  image.setAttribute('alt', galleryItems[i].description);
-  link.appendChild(image);
-
-  link.addEventListener(
-    'click',
-    (function (index) {
-      return function (event) {
-        event.preventDefault();
-
-        const lightbox = basicLightbox.create(
-          `<img src="${galleryItems[index].original}">`
-        );
-
-        const closeLightbox = function () {
-          lightbox.close();
-          document.removeEventListener('keydown', handleKeyDown);
-        };
-
-        const handleKeyDown = function (event) {
-          if (event.key === 'Escape') {
-            closeLightbox();
-          }
-        };
-
-        lightbox.show();
-        document.addEventListener('keydown', handleKeyDown);
-        lightbox
-          .element()
-          .querySelector('.basicLightbox')
-          .addEventListener('click', closeLightbox);
-      };
-    })(i)
-  );
+  ulEl.addEventListener('keydown', (event) => {
+    if (event.code === 'Escape') {
+      document.removeEventListener('keydown', event);
+      instance.close();
+    }
+  });
 }
